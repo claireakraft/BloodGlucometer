@@ -34,9 +34,13 @@ Adafruit_HX8357 tft = Adafruit_HX8357(TFT_CS, TFT_DC, TFT_RST);
 #define XP 4   // can be a digital pin
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
+// initializing redLED
+
+#define LED_PIN 2
 
 int value1;
 int ready=0;
+int wait = 1;
 
 void setup() {
 
@@ -72,11 +76,28 @@ void setup() {
   tft.setRotation(1);
 
   Serial.print(F("Lines                    "));
-  //Serial.println(testLines(HX8357_CYAN));
+  Serial.println(testLines(HX8357_CYAN));
   delay(500);
-  //tft.fillScreen(HX8357_BLACK);
 
-  tft.setRotation(2);  
+  // waiting for bluetooth connection
+  //tft.setRotation(2);
+  //tft.fillScreen(0xDEF8);
+  //tft.setCursor(50, 170);
+  //tft.setTextColor(HX8357_BLACK);  
+  //tft.setTextSize(3);
+  //tft.print("Waiting for");
+  //tft.setCursor(50, 200);
+  //tft.print("Bluetooth");
+  //tft.setCursor(50, 230);
+  //tft.print("Connection...");  
+
+
+    
+
+  // LED setup 
+  pinMode(LED_PIN, OUTPUT);
+
+  waitScreen();
   
 
 
@@ -92,16 +113,17 @@ void loop() {
   int ID = 0;
   int scan = 0;
   int v = 0;
+  //int wait = 0;
 
   if (central) {  // if a central is connected to the peripheral
     Serial.print("Connected to central: ");
-
+    wait = 0;
     // set up home screen
     homescreen();
 
-    Serial.println(central.address()); // print the central's BT address
+    //Serial.println(central.address()); // print the central's BT address
     
-    digitalWrite(LED_BUILTIN, HIGH); // turn on the LED to indicate the connection
+    //digitalWrite(LED_BUILTIN, HIGH); // turn on the LED to indicate the connection
 
     // check the battery level every 200ms
     // while the central is connected:
@@ -195,7 +217,16 @@ void loop() {
     Serial.print("Disconnected from central: ");
     Serial.println(central.address());
   }
-
+  else if (!central){  
+    while (wait == 0){
+      waitScreen();  
+      wait++; 
+      ID = 0;
+      scan = 0;
+      v = 0;
+      ready = 0;       
+    }  
+  }
 
 }
 
@@ -215,6 +246,20 @@ unsigned long testLines(uint16_t color) {
   for(y2=0; y2<h; y2+=6) tft.drawLine(x1, y1, x2, y2, color);
 
   return micros() - start;
+}
+
+void waitScreen(){
+  // waiting for bluetooth connection
+  tft.setRotation(2);
+  tft.fillScreen(0xDEF8);
+  tft.setCursor(50, 170);
+  tft.setTextColor(HX8357_BLACK);  
+  tft.setTextSize(3);
+  tft.print("Waiting for");
+  tft.setCursor(50, 200);
+  tft.print("Bluetooth");
+  tft.setCursor(50, 230);
+  tft.print("Connection...");  
 }
 
 void getValue(){
@@ -391,6 +436,7 @@ float checkScan(){
      Serial.print("\tPressure = "); Serial.println(p.z);
      
     // turn LED on
+    digitalWrite(LED_PIN, HIGH);
      return 11;
     }
     else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 430 && p.y < 530) {
@@ -399,7 +445,8 @@ float checkScan(){
      Serial.print("\tY = "); Serial.print(p.y);
      Serial.print("\tPressure = "); Serial.println(p.z);  
 
-     // turn LED on  
+     // turn LED off
+     digitalWrite(LED_PIN, LOW);
      return 112;
     }
     else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 300 && p.y < 400) {
