@@ -52,7 +52,7 @@ void setup() {
     //Serial.println("starting Bluetooth® Low Energy failed!");
     while (1);
   }
-  BLE.setLocalName("Blood Glucometer"); //Setting a name that will appear when scanning for Bluetooth® devices
+  BLE.setLocalName("BLoodGlu"); //Setting a name that will appear when scanning for Bluetooth® devices
   BLE.setAdvertisedService(newService);
   newService.addCharacteristic(reading);
   BLE.addService(newService);  // adding the service
@@ -237,6 +237,13 @@ void waitScreen(){
   tft.setCursor(70, 210);
   tft.print("Loading...");  
 
+  tft.setCursor(120, 455);
+  tft.setTextColor(0x031F); 
+  tft.print("MU ");
+  tft.setTextColor(0xD608);
+  tft.print("Nursing");
+
+
 }
 
 void getValue(){
@@ -244,8 +251,8 @@ void getValue(){
   //char buffer[30];
 
   //value1 = reading.value();
-  x = value1 / 10;
-  if((x) >= 10){
+  //x = value1 / 10;
+  if((value1>=100) && (value1<=600)){
     tft.fillScreen(0xDEF8);
     tft.setCursor(10, 170);
     tft.setTextColor(HX8357_BLACK);  tft.setTextSize(13);
@@ -258,7 +265,7 @@ void getValue(){
     tft.print("Done");
             
   }
-  else{          
+  else if ((value1<100) && value1>=20){          
     tft.fillScreen(0xDEF8);
     tft.setCursor(0, 170);
     tft.setTextColor(HX8357_BLACK);  tft.setTextSize(13);
@@ -271,7 +278,29 @@ void getValue(){
     tft.setCursor(76, 380);
     tft.print("Done");
             
-  }    
+  }   
+  else if(value1 < 20){
+    tft.fillScreen(0xDEF8);
+    tft.setCursor(10, 170);
+    tft.setTextColor(HX8357_BLACK);  tft.setTextSize(13);
+    tft.print(" ");
+    tft.print("LO"); 
+    tft.setTextSize(2);
+    tft.drawRect(60, 350, 200, 75, HX8357_BLACK);
+    tft.setCursor(76, 380);
+    tft.print("Done");
+  } 
+  else if(value1 > 600){
+    tft.fillScreen(0xDEF8);
+    tft.setCursor(20, 170);
+    tft.setTextColor(HX8357_BLACK);  tft.setTextSize(13);
+    tft.print(" ");
+    tft.print("HI"); 
+    tft.setTextSize(2);
+    tft.drawRect(60, 350, 200, 75, HX8357_BLACK);
+    tft.setCursor(76, 380);
+    tft.print("Done");
+  }
   return;
 
 }
@@ -298,6 +327,14 @@ void homescreen(){
   tft.setCursor(76, 380);
   tft.print("Review Results");
   //delay(50000);
+  
+  tft.setTextSize(3);
+  tft.setCursor(120, 455);
+  tft.setTextColor(0x031F); 
+  tft.print("MU ");
+  tft.setTextColor(0xD608);
+  tft.print("Nursing");
+
 }
 
 float homeCheck(){
@@ -306,14 +343,14 @@ float homeCheck(){
     if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 575 && p.y < 675) {
      return 1;
     }
-    else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 430 && p.y < 530) {
-     tft.fillScreen(HX8357_BLUE);     
-     return 2;
-    }
-    else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 300 && p.y < 400) {
-     tft.fillScreen(HX8357_RED);
-     return 3;
-    }
+    //else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 430 && p.y < 530) {
+    // tft.fillScreen(HX8357_BLUE);     
+    // return 2;
+    //}
+    //else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 300 && p.y < 400) {
+    // tft.fillScreen(HX8357_RED);
+    // return 3;
+    //}
   return 0;
 
 }
@@ -330,6 +367,14 @@ void IDScreen(){
     tft.drawRect(60, 250, 200, 75, HX8357_BLACK);
     tft.setCursor(90, 280);
     tft.print("Back");
+  
+  tft.setTextSize(3);
+  tft.setCursor(120, 455);
+  tft.setTextColor(0x031F); 
+  tft.print("MU ");
+  tft.setTextColor(0xD608);
+  tft.print("Nursing");
+
 }
 
 float checkID(){
@@ -363,6 +408,14 @@ void scanScreen(){
   tft.drawRect(60, 350, 200, 75, HX8357_BLACK);
   tft.setCursor(76, 380);
   tft.print("Back");
+  
+  tft.setTextSize(3);
+  tft.setCursor(120, 455);
+  tft.setTextColor(0x031F); 
+  tft.print("MU ");
+  tft.setTextColor(0xD608);
+  tft.print("Nursing");
+
 
 }
 
@@ -417,6 +470,15 @@ void insertScreen(){
   tft.print("Insert Test");
   tft.setCursor(110, 380);
   tft.print("Strip");
+
+  tft.setTextSize(3);
+  tft.setCursor(120, 455);
+  tft.setTextColor(0x031F); 
+  tft.print("MU ");
+  tft.setTextColor(0xD608);
+  tft.print("Nursing");
+
+
 }
 
 int stripCheck(){
@@ -436,6 +498,7 @@ void waiting(void){
   tft.fillCircle(160, 230, 10, HX8357_BLACK);
   delay(200);
   tft.fillCircle(210, 230, 10, HX8357_BLACK);
+
 }
 
 int sendCheck(void){
