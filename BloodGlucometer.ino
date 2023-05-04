@@ -13,7 +13,7 @@
 
 // Initializing Bluetooth
 BLEService newService("180A"); // creating the service
-BLEFloatCharacteristic reading("2A57", BLERead | BLEWrite); // creating the Analog Value characteristic
+BLEIntCharacteristic reading("2A57", BLERead | BLEWrite); // creating the Analog Value characteristic
 long previousMillis = 0;
 // Initializing Screen
 #define TFT_CS 7        // wiring CS to digital 7
@@ -31,7 +31,7 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 // initializing redLED
 #define LED_PIN 2
 // initializing the proximity sensor
-Adafruit_VCNL4010 vcnl;
+//Adafruit_VCNL4010 vcnl;
 // initializing the button
 int switchPin = 5;              // switch is connected to pin 5
 
@@ -58,11 +58,6 @@ void setup() {
   BLE.addService(newService);  // adding the service
   reading.writeValue(0);
   BLE.advertise(); //start advertising the service
-
-  
-  //Serial.print(F("Lines                    "));
-  //Serial.println(testLines(HX8357_CYAN));
-  //delay(500);
 
   // LED setup 
   pinMode(LED_PIN, OUTPUT);
@@ -117,7 +112,6 @@ void loop() {
             }
             // call function to check ID screen
             ready = checkID();
-            //Serial.println(ready);
 	          break;
 
           case 11:
@@ -131,6 +125,7 @@ void loop() {
 
           // if back button pressed on ID screen, go back to homescreen
           case 12:
+
 	          homescreen();
             ready = 0;
             ID = 0;
@@ -138,6 +133,7 @@ void loop() {
 
           // if the scanner is turned off display value and check value screen from done button to be pressed
           case 112:
+            // insert test strip screen
             while(in == 0){
               insertScreen();
               in++;
@@ -146,10 +142,8 @@ void loop() {
           	break;
           
           case 11200:
-            //while(w == 0){
-              waiting();
-            //  w++;
-            //}
+            //waiting screen for value to be sent
+            waiting();
             ready = sendCheck();
             break;
 
@@ -161,7 +155,7 @@ void loop() {
           	break;
 
           case 1120:
-            //delay(1000);
+            // on display with value shown
             while(v == 0){
               getValue();
               v++;
@@ -185,14 +179,14 @@ void loop() {
         }
 
       }
-
-      
     }
     
     digitalWrite(LED_BUILTIN, LOW); // when the central disconnects, turn off the LED
     //Serial.print("Disconnected from central: ");
     //Serial.println(central.address());
   }
+
+  // if disconnected from bluetooth go back to wait screen and reset all varibles that keep track of the screen
   else if (!central){  
     while (wait == 0){
       waitScreen();  
@@ -203,26 +197,8 @@ void loop() {
       ready = 0;       
     }  
   }
-
 }
 
-unsigned long testLines(uint16_t color) {
-  unsigned long start;
-  int           x1, y1, x2, y2,
-                w = tft.width(),
-                h = tft.height();
-
-  tft.fillScreen(HX8357_BLACK);
-
-  x1 = y1 = 0;
-  y2    = h - 1;
-  start = micros();
-  for(x2=0; x2<w; x2+=6) tft.drawLine(x1, y1, x2, y2, color);
-  x2    = w - 1;
-  for(y2=0; y2<h; y2+=6) tft.drawLine(x1, y1, x2, y2, color);
-
-  return micros() - start;
-}
 
 void waitScreen(){
   // waiting for bluetooth connection
@@ -231,9 +207,6 @@ void waitScreen(){
   tft.setCursor(50, 170);
   tft.setTextColor(HX8357_BLACK);  
   tft.setTextSize(3);
-  //tft.print("Waiting for");
-  //tft.setCursor(50, 200);
-  //tft.print("Bluetooth");
   tft.setCursor(70, 210);
   tft.print("Loading...");  
 
@@ -249,9 +222,10 @@ void waitScreen(){
 void getValue(){
   int x;
   //char buffer[30];
-
   //value1 = reading.value();
   //x = value1 / 10;
+
+  // formating for triple digit number
   if((value1>=100) && (value1<=600)){
     tft.fillScreen(0xDEF8);
     tft.setCursor(10, 170);
@@ -265,6 +239,7 @@ void getValue(){
     tft.print("Done");
             
   }
+  // formating for double digit number
   else if ((value1<100) && value1>=20){          
     tft.fillScreen(0xDEF8);
     tft.setCursor(0, 170);
@@ -279,6 +254,7 @@ void getValue(){
     tft.print("Done");
             
   }   
+  // formating for LO
   else if(value1 < 20){
     tft.fillScreen(0xDEF8);
     tft.setCursor(10, 170);
@@ -290,6 +266,7 @@ void getValue(){
     tft.setCursor(76, 380);
     tft.print("Done");
   } 
+  // formating for HI
   else if(value1 > 600){
     tft.fillScreen(0xDEF8);
     tft.setCursor(20, 170);
@@ -310,7 +287,6 @@ void homescreen(){
   //tft.fillScreen(HX8357_BLACK);
   tft.setTextColor(HX8357_BLACK);
   tft.fillScreen(0xDEF8);
-  //tft.fillScreen(0xCE56);
   tft.setCursor(10, 10);
   tft.setTextColor(HX8357_BLACK);  
   tft.setTextSize(3);
@@ -326,7 +302,6 @@ void homescreen(){
   tft.drawRect(60, 350, 200, 75, HX8357_BLACK);
   tft.setCursor(76, 380);
   tft.print("Review Results");
-  //delay(50000);
   
   tft.setTextSize(3);
   tft.setCursor(120, 455);
@@ -338,7 +313,7 @@ void homescreen(){
 }
 
 float homeCheck(){
-// touch screen stuff
+// check if patient test has been pressed
     TSPoint p = ts.getPoint();
     if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 575 && p.y < 675) {
      return 1;
@@ -357,16 +332,16 @@ float homeCheck(){
 
 void IDScreen(){
 
-    tft.setTextColor(HX8357_BLACK);
-    tft.fillScreen(0xDEF8);
-    tft.setTextColor(HX8357_BLACK);
-    tft.drawRect(60, 150, 200, 75, HX8357_BLACK);
-    tft.setTextSize(2);
-    tft.setCursor(90, 180);
-    tft.print("Use Scanner");
-    tft.drawRect(60, 250, 200, 75, HX8357_BLACK);
-    tft.setCursor(90, 280);
-    tft.print("Back");
+  tft.setTextColor(HX8357_BLACK);
+  tft.fillScreen(0xDEF8);
+  tft.setTextColor(HX8357_BLACK);
+  tft.drawRect(60, 150, 200, 75, HX8357_BLACK);
+  tft.setTextSize(2);
+  tft.setCursor(90, 180);
+  tft.print("Use Scanner");
+  tft.drawRect(60, 250, 200, 75, HX8357_BLACK);
+  tft.setCursor(90, 280);
+  tft.print("Back");
   
   tft.setTextSize(3);
   tft.setCursor(120, 455);
@@ -378,10 +353,12 @@ void IDScreen(){
 }
 
 float checkID(){
+  // check if scan button is pressed
   TSPoint p = ts.getPoint();
     if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 575 && p.y < 675) {
      return 11;
     }
+    //check is back button is pressed
     else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 430 && p.y < 530) {  
      return 12;
     }
@@ -421,16 +398,19 @@ void scanScreen(){
 
 float checkScan(){
    TSPoint p = ts.getPoint();
+    // check if turn on is pressed
     if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 575 && p.y < 675) {
       // turn LED on
       digitalWrite(LED_PIN, HIGH);
       return 11;
     }
+    // check if turn off is pressed
     else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 430 && p.y < 530) {
       // turn LED off
       digitalWrite(LED_PIN, LOW);
       return 112;
     }
+    // check if back button is pressed
     else if (p.z > ts.pressureThreshhold && p.x > 415 && p.x < 730 && p.y > 300 && p.y < 400) {
       return 113;
     }
@@ -439,6 +419,7 @@ float checkScan(){
 }
 
 float checkValue(){
+  // check if done is pressed
   TSPoint p = ts.getPoint();
   if (p.z > ts.pressureThreshhold && p.x > 300 && p.x < 800 && p.y > 200 && p.y < 500) {
      return 1121;
@@ -454,12 +435,9 @@ void DrawAngledLine(int x, int y, int x1, int y1, int size, int color) {
 }
 
 void insertScreen(){
+  // display for insert test strip screen
   tft.setRotation(2);
   tft.fillScreen(0xDEF8);
-  //tft.drawLine(100, 70, 100, 125, HX8357_BLACK);
-  //tft.drawLine(100, 125, 80, 100, HX8357_BLACK);
-  //tft.drawLine(100, 125, 120, 100, HX8357_BLACK);
-  //tft.drawRect(150, 100, 50, 200, HX8357_BLACK);
   DrawAngledLine(100, 70, 100, 125, 7, HX8357_BLACK);
   DrawAngledLine(100, 125, 80, 100, 7, HX8357_BLACK);
   DrawAngledLine(100, 125, 120, 100, 7, HX8357_BLACK);
@@ -477,11 +455,10 @@ void insertScreen(){
   tft.print("MU ");
   tft.setTextColor(0xD608);
   tft.print("Nursing");
-
-
 }
 
 int stripCheck(){
+  //check if button has been pressed
   int val = digitalRead(switchPin);   // read input value and store it in val
   if (val == LOW) {               // check if the button is pressed 
     return 112;
@@ -492,6 +469,7 @@ int stripCheck(){
 }
 
 void waiting(void){
+  // waiting screen for after the test strip is inserted
   tft.fillScreen(0xDEF8);
   tft.fillCircle(110, 230, 10, HX8357_BLACK);
   delay(200);
@@ -502,7 +480,8 @@ void waiting(void){
 }
 
 int sendCheck(void){
-  
+
+    //checking if the value has been sent
     if (reading.written()) {
       //getValue();
       value1 = reading.value();
